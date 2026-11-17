@@ -1,0 +1,27 @@
+# Participant work and credentials must not enter the starter repository.
+.env*
+.aws/
+*credentials*
+*secrets*.json
+*.local.json
+*.pem
+*.key
+*.db*
+*.sqlite*
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+node_modules/
+dist/
+artifacts/
+*.zip
+*.tar.gz
+.terraform/
+*.tfstate*
+*.tfplan
+*.tfvars*
+crash.log
+*.log
+.DS_Store
+Thumbs.db
