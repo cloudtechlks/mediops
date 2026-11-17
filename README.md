@@ -2,7 +2,7 @@
 
 LKS 2027 · Cloud Computing · City Level
 
-The module brief is distributed separately by the organizers and is not included in this repository. Read `app/README.md` if this module contains an application.
+The module questions and challenges are available in the Jam platform after you press Start and pass the AI pre-check; they are not included in this repository. Read `app/README.md` if this module contains an application.
 
 AWS Academy Learner Lab · us-east-1 · existing LabRole · 240 minutes · 100 points.
 Submit verification through the competition Jam platform, not GitHub.
