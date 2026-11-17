@@ -11,10 +11,6 @@ Parameters:
     Type: String
     Description: Lab starting environment
     AllowedPattern: ".+\\.dkr\\.ecr\\..+\\.amazonaws\\.com/.+"
-  RecoveryPublicKey:
-    Type: String
-    Description: Lab starting environment
-    AllowedPattern: "[A-Za-z0-9_-]{43}"
   StudentId:
     Type: String
     AllowedPattern: "[a-z0-9-]+"
@@ -258,7 +254,7 @@ Resources:
         Image: !Ref 'AppImageUri'
         PortMappings: [{ContainerPort: 80, Protocol: tcp}]
         Environment:
-        - {Name: RECOVERY_PUBLIC_KEY, Value: !Ref 'RecoveryPublicKey'}
+        - {Name: MEDIOPS_RECOVERY_MODE, Value: local}
         - {Name: DOCS_BUCKET, Value: !Ref 'DocsBucket'}
         - {Name: AWS_REGION, Value: !Ref "AWS::Region"}
         - {Name: APP_PORT, Value: ""}

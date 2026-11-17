@@ -1,51 +1,50 @@
-# MediOps Recovery Console — supplied application
+# MediOps Recovery Console
 
-Questions appear in Jam after Start and the AI pre-check. Do not change application
-business logic. Restore the existing incident environment; do not replace it with
-a completed solution stack. This folder is application source, not an answer key.
+The original Jam access code, Start button and AI pre-check are unchanged.
+Questions and submission/scoring remain in Jam. The application restoration key
+is generated and used entirely inside this application, never in the Jam UI.
 
-## Runtime contract
+## Deployment contract
 
-| Variable | Requirement |
-|---|---|
-| APP_PORT | 3000 |
-| AWS_REGION | us-east-1 |
-| DB_HOST | Actual PostgreSQL endpoint |
-| DB_SECRET_ARN | Secrets Manager JSON: username, password, dbname |
-| DOCS_BUCKET | Your deployment's private documents bucket |
-| RECOVERY_PUBLIC_KEY | Organizer-supplied base64url Ed25519 public verification key |
+Build the supplied app/ Dockerfile for linux/amd64 and publish to ECR. Pass its URI
+as AppImageUri to the incident template. Use existing LabRole for ECS execution/task
+roles. No organizer signing key or RecoveryPublicKey parameter is needed.
 
-Use existing LabRole as ECS task and execution role. Build the supplied Dockerfile
-for linux/amd64 and publish to your own ECR repository. The incident template takes
-AppImageUri and RecoveryPublicKey as deployment inputs. The organizer supplies the
-public key before deployment. The private signing key is never supplied to participants.
+Runtime environment: APP_PORT=3000, AWS_REGION=us-east-1, DB_HOST (actual PostgreSQL
+endpoint), DB_SECRET_ARN (JSON username/password/dbname), DOCS_BUCKET (your documents
+bucket), MEDIOPS_RECOVERY_MODE=local. Do not rewrite supplied application logic.
 
-The app uses the existing SQS queue named mediops-jobs-queue. Database tables are
-initialized on first dashboard access; use synthetic references/text only.
-GET /health is liveness only, independent of database configuration. This allows
-network/load-balancer incidents to be repaired before data configuration incidents.
-The root page is a locked recovery console, not an operational dashboard yet.
+Restore the supplied infrastructure according to the incidents; do not substitute
+a completed solution over participant work. The initial idle service and wrong
+configuration are intentional starting conditions, not a deployment failure to skip.
+GET /health is liveness only, so load balancing can recover before data wiring.
 
-## Completion flow
+## Application unlock flow
 
-1. Resolve and submit all twelve incidents in Jam.
-2. On the Jam task board select **Request Recovery Token**. Jam rechecks all twelve
-   incidents against your AWS account; this does not award points or consume attempts.
-3. Once all checks pass, copy the signed token. It is account-bound and expires
-   after four hours. Request it before your module working time ends.
-4. Open the CloudFormation stack output **AlbUrl**, paste the token and unlock.
-5. Demonstrate a queued request, job processing, private S3 document storage and
-   actual database/storage/queue status. Failed jobs are retried and can reach the DLQ.
+1. Repair/deploy the workload and open CloudFormation output AlbUrl.
+2. In the locked application select **Check restoration and obtain application key**.
+3. The backend checks AWS configuration and real PostgreSQL/S3 connectivity. Any
+   failed check or API permission error keeps the app locked. It does not reveal
+   which incident to fix and does not contact Jam.
+4. When ready, the app returns a random key in the input box. Select **Unlock operations**.
+5. Demonstrate database-backed requests, SQS processing and private S3 documents.
 
-The token is completion evidence at issuance, not continuous posture certification.
-It is not a patient identity system: all holders of an account's valid token share
-that lab's synthetic workspace. For a real event, supply HTTPS at the ALB before
-entering tokens. The baseline incident listener is HTTP; do not use real data or
-credentials there. Never put AWS keys in the browser, image or repository.
+Only key hashes are stored in PostgreSQL, shared by all ECS replicas. Keys expire
+in four hours and protected API operations recheck readiness. A failed deployment
+cannot be unlocked with an arbitrary key. No plaintext key is logged or persisted
+in browser storage. This is a synthetic lab, not per-user patient authentication.
+The AWS task role must support read access to the relevant EC2, RDS, ECS, ELB,
+SSM, Secrets Manager, S3, SNS, CloudWatch, SQS and Auto Scaling APIs as well as the
+application's actual data operations. Organizer must test Learner Lab permissions.
 
-## Local UI inspection
+Use trusted HTTPS supplied by the organizer before entering keys. Baseline HTTP
+is only for isolated troubleshooting. Never use real patient data or AWS browser
+credentials. Supplied code is visible to participants, who control their own AWS
+resources; the app gate is functional feedback, not anti-cheating security. Jam
+validators and judge acceptance remain the independent assessment.
 
-Install requirements and run `flask --app app run --port 3000` from this directory.
-The locked page and /health can be viewed without AWS credentials. Unlock and data
-operations require the organizer public key, a valid Jam token and a real AWS lab
-deployment; the application does not fabricate connection results in local mode.
+## Local preview
+
+Install requirements, then run `flask --app app run --port 3000` from app/.
+The locked page and /health work locally without AWS. Successful readiness/data
+operations require an actual configured AWS lab, not fabricated local statuses.

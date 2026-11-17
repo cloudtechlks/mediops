@@ -6,7 +6,7 @@ function lock() { token = ''; $('workspace').classList.add('hidden'); $('gate').
 async function api(path, body) {
   const response = await fetch(path, { method: body === undefined ? 'GET' : 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
   const data = await response.json();
-  if (response.status === 401) lock();
+  if (response.status === 401 || response.status === 423) lock();
   if (!response.ok) throw new Error(data.error || 'Request failed');
   return data;
 }
@@ -28,7 +28,12 @@ $('unlock-form').onsubmit = action(async () => {
   token = $('recovery-token').value.trim();
   try { await api('/api/unlock', {}); } catch (error) { lock(); throw error; }
   $('recovery-token').value = ''; $('gate').classList.add('hidden'); $('workspace').classList.remove('hidden');
-  notice('Recovery token accepted. Loading live AWS-backed operations.'); await load();
+  notice('Application key accepted. Loading live AWS-backed operations.'); await load();
+});
+$('check-restoration').onclick = action(async () => {
+  const data = await api('/api/restoration/check', {});
+  $('recovery-token').value = data.key;
+  notice(data.detail);
 });
 $('case-form').onsubmit = action(async () => { await api('/api/cases', { reference: $('reference').value }); $('case-form').reset(); notice('Request stored in PostgreSQL and sent to SQS.'); await load(); });
 $('document-form').onsubmit = action(async () => { await api('/api/documents', { text: $('document-text').value }); $('document-form').reset(); notice('Document stored in private S3.'); await load(); });

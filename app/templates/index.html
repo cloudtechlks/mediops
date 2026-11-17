@@ -11,11 +11,12 @@
   <header class="navbar bg-neutral text-neutral-content px-6"><h1 class="text-xl font-bold">MediOps / Recovery Console</h1></header>
   <main class="max-w-5xl mx-auto p-6 space-y-6">
     <p class="text-sm opacity-70">Infrastructure incident response · Synthetic administrative data only · Not a medical device</p>
-    <p id="notice" class="alert" role="status">Restore the environment, then request a Recovery Token from the Jam task board.</p>
+    <p id="notice" class="alert" role="status">Restore the environment, then check restoration here in the application.</p>
     <section id="gate" class="card bg-base-100 shadow"><form id="unlock-form" class="card-body gap-4">
       <h2 class="card-title">Operations locked</h2>
-      <p>The portal is reachable. The operational workspace requires a signed Recovery Token issued by Jam after all twelve incidents pass live verification.</p>
-      <label class="form-control"><span class="label-text mb-2">Recovery Token</span><textarea id="recovery-token" class="textarea textarea-bordered font-mono" rows="4" required maxlength="4096" autocomplete="off" spellcheck="false"></textarea></label>
+      <p>The application checks the restored AWS environment itself. If checks fail, operations stay locked. This application key is unrelated to the access code used to start a module in Jam.</p>
+      <button id="check-restoration" class="btn btn-outline self-start" type="button">Check restoration and obtain application key</button>
+      <label class="form-control"><span class="label-text mb-2">Application restoration key</span><textarea id="recovery-token" class="textarea textarea-bordered font-mono" rows="4" required maxlength="4096" autocomplete="off" spellcheck="false"></textarea></label>
       <button class="btn btn-primary self-start">Unlock operations</button>
     </form></section>
     <section id="workspace" class="hidden space-y-6">
@@ -28,7 +29,7 @@
       <section class="card bg-base-100 shadow"><div class="card-body"><div class="flex flex-wrap justify-between gap-3"><h3 class="card-title">Processing queue</h3><button id="process" class="btn btn-primary btn-sm">Process up to five jobs</button></div><p id="queue"></p><div class="overflow-x-auto"><table class="table"><thead><tr><th>Reference</th><th>Status</th><th>Created</th></tr></thead><tbody id="cases"></tbody></table></div></div></section>
       <section class="card bg-base-100 shadow"><div class="card-body"><h3 class="card-title">Private S3 documents</h3><ul id="documents" class="space-y-2 break-all"></ul></div></section>
     </section>
-    <footer class="text-xs opacity-60">Recovery tokens stay in browser memory only. The dashboard reports actual backend operations, not simulated AWS status. A token is completion evidence at issuance time, not continuous infrastructure certification.</footer>
+    <footer class="text-xs opacity-60">Application keys stay in browser memory only; only their hashes are stored in the database. Protected operations recheck readiness. Jam remains the independent scoring authority. Use synthetic data only.</footer>
   </main>
 </body>
 </html>

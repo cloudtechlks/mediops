@@ -17,20 +17,18 @@ This repository contains supplied application source/contracts (where applicable
 
 Use synthetic data only. Never commit AWS credentials, passwords, Terraform state, plans, generated artifacts, or your completed competition solution to this starter repository. Keep participant infrastructure work in your own private workspace. Follow organizer instructions for cleanup.
 
-## Recovery Console
+## Application restoration
 
-The supplied app/ now contains a real token-gated operational dashboard. Read
-app/README.md for its runtime contract. Build/publish the application image to ECR
-(or use an organizer-provided release); supply AppImageUri and RecoveryPublicKey
-when creating the incident starting state. The public key is available on the Jam
-task board after Start and the AI pre-check. Never include a private signing key.
+The original code for entering/starting the Jam module is unchanged. No application
+restoration token is issued or entered in Jam. Jam remains questions/submissions/scoring.
 
-Resolve and submit twelve incidents, then request a Recovery Token in Jam before
-your timer ends. Jam checks the live environment again; the signed token unlocks
-the application at the stack output AlbUrl. It does not add points or consume
-attempts. Use organizer-provided trusted HTTPS for token entry and synthetic data only.
+Read app/README.md. Build/publish app/ and restore the existing incident environment.
+At stack output AlbUrl, the application itself checks readiness. If the environment
+is ready, it generates an application key there. Use it on the same page to unlock
+all dashboard functions. Failed readiness keeps operations locked, including with
+an old key. Keys are hashed in PostgreSQL and expire after four hours.
 
-This is a new starting-state version, not a reason to replace an existing stack.
-For labs already in progress, ask the organizer for an in-place migration before
-changing workload configuration. The source and templates have offline tests;
-live AWS deployment and browser acceptance remain required before competition use.
+No organizer signing key, public key parameter or Jam recovery endpoint is needed.
+Use trusted HTTPS and synthetic data only. Existing lab deployments need an in-place
+image rollout; do not replace participant stacks or reset recorded scores. Live AWS
+permissions/browser acceptance must be tested before competition use.

@@ -3,12 +3,14 @@ import functools
 import json
 import os
 import uuid
+import hashlib
+import secrets
 
 import boto3
 import psycopg2
 from flask import Flask, jsonify, render_template, request
 from psycopg2.extras import RealDictCursor
-from recovery_token import verify_token
+from readiness import is_ready
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 32768
@@ -28,12 +30,13 @@ def authorized(view):
     def wrapped(*args, **kwargs):
         header = request.headers.get("Authorization", "")
         if not header.startswith("Bearer ") or not header[7:].strip():
-            return jsonify(error="A valid Jam Recovery Token is required."), 401
-        try:
-            verify_token(header.removeprefix("Bearer ") if header.startswith("Bearer ") else "",
-                         os.environ.get("RECOVERY_PUBLIC_KEY", ""), account_id())
-        except ValueError:
-            return jsonify(error="A valid Jam Recovery Token is required."), 401
+            return jsonify(error="Unlock the application using its restoration key."), 401
+        if not restoration_ready():
+            return jsonify(error="The environment is not fully restored. Operations remain locked."), 423
+        digest = hashlib.sha256(header[7:].encode()).hexdigest()
+        rows = database("SELECT digest FROM mediops_access WHERE digest=%s AND expires_at > NOW()", (digest,), fetch=True)
+        if not rows:
+            return jsonify(error="Invalid or expired application restoration key."), 401
         return view(*args, **kwargs)
     return wrapped
 
@@ -54,6 +57,8 @@ def database(operation, params=(), fetch=False):
                 cursor.execute("CREATE TABLE IF NOT EXISTS mediops_cases "
                                "(id VARCHAR(36) PRIMARY KEY, reference VARCHAR(80) NOT NULL, "
                                "status VARCHAR(20) NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW())")
+                cursor.execute("CREATE TABLE IF NOT EXISTS mediops_access "
+                               "(digest VARCHAR(64) PRIMARY KEY, expires_at TIMESTAMPTZ NOT NULL)")
                 cursor.execute(operation, params)
                 return [dict(row) for row in cursor.fetchall()] if fetch else None
     finally:
@@ -99,6 +104,29 @@ def health():
 @authorized
 def unlock():
     return jsonify(unlocked=True, account=account_id())
+
+
+def restoration_ready():
+    if not is_ready(client):
+        return False
+    try:
+        database("SELECT 1", fetch=True)
+        client("s3").list_objects_v2(Bucket=os.environ.get("DOCS_BUCKET", ""), Prefix="documents/", MaxKeys=1)
+        return True
+    except Exception:
+        return False
+
+
+@app.post("/api/restoration/check")
+def check_restoration():
+    # This endpoint lives on the participant's workload, not the Jam server.
+    if not restoration_ready():
+        return jsonify(error="Restoration is incomplete or could not be verified. Review the incident requirements; operations remain locked."), 423
+    key = secrets.token_urlsafe(32)
+    digest = hashlib.sha256(key.encode()).hexdigest()
+    database("DELETE FROM mediops_access WHERE expires_at <= NOW()")
+    database("INSERT INTO mediops_access (digest, expires_at) VALUES (%s, NOW() + INTERVAL '4 hours')", (digest,))
+    return jsonify(key=key, expires_in=14400, detail="Environment restored. Enter this application key below to unlock operations.")
 
 
 @app.get("/api/dashboard")
