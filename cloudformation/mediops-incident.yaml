@@ -152,7 +152,7 @@ Resources:
     Properties:
       Name: /mediops/db_host
       Type: String
-      Value: "placeholder.internal"
+      Value: "db.internal"
   AppPortParam:
     Type: AWS::SSM::Parameter
     Properties:
@@ -300,7 +300,7 @@ Resources:
       Type: String
       Value: "internal-cache.local"
       Description: "Lab starting environment"
-  SpareVolume:
+  DataVolume:
     Type: AWS::EC2::Volume
     Properties:
       AvailabilityZone: us-east-1a
@@ -308,11 +308,11 @@ Resources:
       VolumeType: gp3
       Encrypted: false
       Tags:
-      - {Key: Name, Value: mediops-spare-scratch}
-  NoiseLogGroup:
+      - {Key: Name, Value: mediops-data-volume}
+  ServiceLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /mediops/noise-app
+      LogGroupName: /mediops/service
   AlertsTopic:
     Type: AWS::SNS::Topic
     Properties:
