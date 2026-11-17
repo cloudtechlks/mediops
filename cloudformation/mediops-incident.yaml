@@ -7,6 +7,14 @@ Parameters:
     NoEcho: true
     MinLength: 12
     Description: Lab starting environment
+  AppImageUri:
+    Type: String
+    Description: Lab starting environment
+    AllowedPattern: ".+\\.dkr\\.ecr\\..+\\.amazonaws\\.com/.+"
+  RecoveryPublicKey:
+    Type: String
+    Description: Lab starting environment
+    AllowedPattern: "[A-Za-z0-9_-]{43}"
   StudentId:
     Type: String
     AllowedPattern: "[a-z0-9-]+"
@@ -247,15 +255,12 @@ Resources:
       TaskRoleArn: !If [HasLabRoleArn, !Ref 'LabRoleArn', !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"]
       ContainerDefinitions:
       - Name: web
-        Image: "public.ecr.aws/nginx/nginx:latest"
-        Command:
-        - /bin/sh
-        - -c
-        - "printf 'server { listen 3000; location = /health { return 200 ok; } location\
-          \ / { return 200 portal; } } ' > /etc/nginx/conf.d/default.conf && exec\
-          \ nginx -g 'daemon off;'"
+        Image: !Ref 'AppImageUri'
         PortMappings: [{ContainerPort: 80, Protocol: tcp}]
         Environment:
+        - {Name: RECOVERY_PUBLIC_KEY, Value: !Ref 'RecoveryPublicKey'}
+        - {Name: DOCS_BUCKET, Value: !Ref 'DocsBucket'}
+        - {Name: AWS_REGION, Value: !Ref "AWS::Region"}
         - {Name: APP_PORT, Value: ""}
         - {Name: DB_HOST, Value: ""}
         - {Name: DB_SECRET_ARN, Value: ""}
@@ -366,6 +371,6 @@ Outputs:
     Value: !Sub "http://${Alb.DNSName}"
   IncidentSummary:
     Description: Lab starting environment
-    Value: "Read MediOps_Jam_Module.md - 12 open tickets across 4 tracks"
+    Value: "Read the module questions in Jam after Start and the AI pre-check."
   StackName:
     Value: !Ref 'AWS::StackName'
